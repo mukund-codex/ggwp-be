@@ -1,0 +1,75 @@
+version : "3"
+services:
+  laravel-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-api
+    depends_on:
+      - laravel-pg
+    volumes:
+      - .:/var/www/html
+    restart: always
+    ports:
+      - "295:80"
+      - "296:296"
+    environment:
+      APP_NAME: 'Laravel Boilerplate | LBP'
+      APP_DEBUG: 'true'
+      APP_URL: 'http://22.95.1.1'
+      DB_CONNECTION: 'pgsql'
+      QUEUE_CONNECTION: 'database'
+      ROLLBAR_TOKEN: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+      XDEBUG_CONFIG: "mode=debug,coverage,develop client_host=host.docker.internal discover_client_host=1 start_with_request=yes"
+      GITHUB_USERNAME: 'founderandlightning'
+      GITHUB_REPONAME: 'fl-laravel_boilerplate'
+    networks:
+      laravel-api-network:
+        ipv4_address: 22.95.1.1
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  laravel-pg:
+    image: postgres:latest
+    ports:
+        - "297:5432"
+    environment:
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: test_db
+    container_name: laravel-pg
+    volumes:
+      - laravel-pg-disk:/var/lib/postgres
+    networks:
+      laravel-api-network:
+        ipv4_address: 22.95.1.2
+
+  laravel-tf:
+      build:
+        context: .
+        dockerfile: setup/terraform/Dockerfile
+      container_name: laravel-tf
+      working_dir: /var/www/html/setup/terraform
+      volumes:
+          - .:/var/www/html
+      environment:
+        HEROKU_API_KEY: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        AWS_ACCESS_KEY_ID: 'xxxxxxxxxxxxxxxxxxxx'
+        AWS_SECRET_ACCESS_KEY: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        POSTMAN_API_KEY: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        CIRCLECI_API_KEY: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+      networks:
+        laravel-api-network:
+          ipv4_address: 22.95.1.3
+
+# On-disk storage of DB data, when containers are stopped
+volumes:
+  laravel-pg-disk: {}
+
+# Local network for services running using this docker-compose config
+networks:
+  laravel-api-network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 22.95.0.0/16
