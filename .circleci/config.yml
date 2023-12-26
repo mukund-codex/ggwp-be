@@ -13,7 +13,7 @@ jobs:
 #      - run:
 #          name: Check Rejected Commits
 #          command: wget ${COMMITS_CHECK_ENDPOINT} -q -O - | grep -q ${COMMITS_CHECK_INDICATOR}
-      - run:- run:
+      - run:
 #          name: Check Rejected Commits
 #          command: wget ${COMMITS_CHECK_ENDPOINT} -q -O - | grep -q ${COMMITS_CHECK_INDICATOR}
           name: Docker compose
