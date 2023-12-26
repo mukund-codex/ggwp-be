@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - '**/.php'
+      - '**/.yml'
+      - '**/.json'
+      - '.env.*'
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Compose
+        run: docker-compose up -d
+
+      - name: CI checks
+        run: docker-compose exec -T lbp-api composer run ci
