@@ -6,7 +6,7 @@ jobs:
     resource_class: medium
     working_directory: ~/code
     environment:
-      - COMMITS_CHECK_ENDPOINT: https://api.reviewee.it/repository/fl-laravel_boilerplate/haveRejectedCommits
+      - COMMITS_CHECK_ENDPOINT: https://api.reviewee.it/repository/ggwp-be/haveRejectedCommits
       - COMMITS_CHECK_INDICATOR: \"success\":true
     steps:
       - checkout
