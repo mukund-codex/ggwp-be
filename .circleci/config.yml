@@ -1,0 +1,64 @@
+version: 2.1
+jobs:
+  ci:
+    machine:
+      image: ubuntu-2004:202201-02
+    resource_class: medium
+    working_directory: ~/code
+    environment:
+      - COMMITS_CHECK_ENDPOINT: https://api.reviewee.it/repository/fl-laravel_boilerplate/haveRejectedCommits
+      - COMMITS_CHECK_INDICATOR: \"success\":true
+    steps:
+      - checkout
+      - run:
+          name: Check Rejected Commits
+          command: wget ${COMMITS_CHECK_ENDPOINT} -q -O - | grep -q ${COMMITS_CHECK_INDICATOR}
+      - run:
+          name: Docker compose up, in detatched/background mode
+          command: docker-compose up -d
+      - run:
+          name: Composer install
+          command: docker-compose exec laravel-api composer install -n --prefer-dist
+      - run:
+          name: CI checks
+          command: docker-compose exec laravel-api composer run ci
+      - run:
+          name: Pre-postman setup
+          command: docker-compose exec laravel-api composer run dev-setup
+      - when:
+          condition:
+            not:
+              equal:
+                - "https://github.com/founderandlightning/fl-laravel_boilerplate"
+                - << pipeline.project.git_url >>
+          steps:
+            - run:
+                name: Run Newman testcases [Comment out, if you do not use Postman]
+                command: docker-compose exec laravel-api newman run https://api.getpostman.com/collections/${POSTMAN_COLLECTION_ID}?apikey=${POSTMAN_API_KEY} -e https://api.getpostman.com/environments/${POSTMAN_ENV_ID}?apikey=${POSTMAN_API_KEY}
+      
+  cd:
+    machine:
+      image: ubuntu-2004:202201-02
+    resource_class: medium
+    working_directory: ~/code
+    steps:
+      - checkout
+      - when:
+          condition:
+            not:
+              equal:
+                - "https://github.com/founderandlightning/fl-laravel_boilerplate"
+                - << pipeline.project.git_url >>
+          steps:
+            - run:
+                name: Heroku deploy
+                command: git push --force https://heroku:$HEROKU_AUTH_KEY@git.heroku.com/$HEROKU_UAT_APP_NAME.git HEAD:refs/heads/master
+
+workflows:
+  version: 2
+  ci-cd:
+    jobs:
+      - ci
+      - cd:
+          requires:
+            - ci

@@ -1,0 +1,23 @@
+name: CI checks
+
+on:
+  push:
+    paths:
+      - '**/.php'
+      - '**/.yml'
+      - '**/.yaml'
+      - '**/.json'
+      - '.env.*'
+      - 'terraform/**'
+
+jobs:
+  CoQa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Compose
+        run: docker-compose up -d
+      - name: Composer install [ + npm install && npm run build]
+        run: docker-compose exec -T laravel-api composer install
+      - name: CI checks
+        run: docker-compose exec -T laravel-api composer run ci
